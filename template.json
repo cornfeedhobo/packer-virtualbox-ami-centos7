@@ -1,0 +1,43 @@
+{
+	"description": "Bare CentOS 7 prepped for AMI import",
+	"builders": [{
+		"name": "centos-7",
+		"type": "virtualbox-iso",
+		"vm_name": "centos-7",
+		"headless": true,
+		"guest_os_type": "RedHat_64",
+		"disk_size": 8000,
+		"iso_url": "http://mirror.steadfast.net/centos/7.1.1503/isos/x86_64/CentOS-7-x86_64-NetInstall-1503.iso",
+		"iso_checksum": "498bb78789ddc7973fe14358822eb1b48521bbaca91c17bd132c7f8c903d79b3",
+		"iso_checksum_type": "sha256",
+		"http_directory": "http",
+		"boot_command": ["<tab> text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/ks.cfg<enter><wait>"],
+		"boot_wait": "10s",
+		"ssh_username": "centos",
+		"ssh_password": "centos",
+		"ssh_port": 22,
+		"ssh_wait_timeout": "10000s",
+		"guest_additions_mode": "disable",
+		"shutdown_command": "echo 'centos'|sudo -S sh -c 'passwd -f -d centos && shutdown -P now'",
+		"output_directory": "/tmp/output-{{.Name}}",
+		"format": "ova"
+	}],
+	"provisioners": [{
+		"type": "shell",
+		"execute_command": "echo 'centos'|sudo -S sh '{{.Path}}'",
+		"inline": [
+			"rm -f /etc/sudoers.d/centos",
+			"yum -y install cloud-init",
+			"systemctl enable cloud-config.service",
+			"systemctl enable cloud-final.service",
+			"systemctl enable cloud-init-local.service",
+			"systemctl enable cloud-init.service",
+			"sed -i /HWADDR/d /etc/sysconfig/network-scripts/ifcfg-*",
+			"shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
+			"shred -u /root/.*history  /home/centos/.*history",
+			"dd if=/dev/zero of=/zeros bs=1M",
+			"rm -f /zeros"
+		]
+	}]
+}
+
