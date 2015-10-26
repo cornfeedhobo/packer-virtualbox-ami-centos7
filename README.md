@@ -6,3 +6,11 @@ This image conforms to Amazon's [guidelines](https://docs.aws.amazon.com/AWSEC2/
 
 Follow Amazon's [import/export guide](https://aws.amazon.com/ec2/vm-import/) to learn how to deploy the OVA once created.
 
+# Usage
+
+To use a different kickstart script, just set the `profile` accordingly.
+
+```
+$ packer build -var 'profile=thinp' template.json
+```
+
