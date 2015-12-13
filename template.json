@@ -1,7 +1,7 @@
 {
 	"description": "Bare CentOS 7 prepped for AMI import",
 	"variables": {
-		"profile": "ext4",
+		"profile": "lvm-xfs",
 		"disk_size": "8192",
 		"ssh_username": "centos",
 		"ssh_password": "centos"
@@ -24,21 +24,22 @@
 		"ssh_port": 22,
 		"ssh_wait_timeout": "10000s",
 		"guest_additions_mode": "disable",
-		"shutdown_command": "echo '{{user `ssh_password`}}' | sudo -S sh -c \"echo '{{user `ssh_username`}}:$(openssl rand -base64 32)' | chpasswd && shutdown -P now\"",
+		"shutdown_command": "sudo -S shutdown -P now",
 		"output_directory": "/tmp/output-{{.Name}}-{{user `profile`}}",
 		"format": "ova"
 	}],
 	"provisioners": [{
 		"type": "shell",
-		"execute_command": "echo '{{user `ssh_password`}}' | sudo -S sh '{{.Path}}'",
+		"execute_command": "sudo -S sh '{{.Path}}'",
 		"inline": [
 			"rm -f /etc/sudoers.d/centos",
-			"yum -y install cloud-init",
+			"yum -y install cloud-init cloud-utils cloud-utils-growpart,
 			"systemctl enable cloud-config.service",
 			"systemctl enable cloud-final.service",
 			"systemctl enable cloud-init-local.service",
 			"systemctl enable cloud-init.service",
 			"sed -i /HWADDR/d /etc/sysconfig/network-scripts/ifcfg-*",
+			"echo \"{{user `ssh_username`}}:$(openssl rand -base64 32)\" | chpasswd",
 			"shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
 			"shred -u /root/.*history  /home/centos/.*history",
 			"dd if=/dev/zero of=/zeros bs=1M",
