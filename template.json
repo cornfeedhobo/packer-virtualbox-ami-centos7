@@ -1,50 +1,62 @@
 {
-	"description": "Bare CentOS 7 prepped for AMI import",
-	"variables": {
-		"profile": "lvm-xfs",
-		"disk_size": "8192",
-		"ssh_username": "centos",
-		"ssh_password": "centos"
-	},
-	"builders": [{
-		"name": "centos7-{{user `profile`}}",
-		"type": "virtualbox-iso",
-		"vm_name": "centos7-{{user `profile`}}",
-		"headless": true,
-		"guest_os_type": "RedHat_64",
-		"disk_size": "{{user `disk_size`}}",
-		"iso_url": "http://mirror.steadfast.net/centos/7.1.1503/isos/x86_64/CentOS-7-x86_64-NetInstall-1503.iso",
-		"iso_checksum": "498bb78789ddc7973fe14358822eb1b48521bbaca91c17bd132c7f8c903d79b3",
-		"iso_checksum_type": "sha256",
-		"http_directory": "http",
-		"boot_command": ["<tab> text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/ks-{{user `profile`}}.cfg<enter><wait>"],
-		"boot_wait": "10s",
-		"ssh_username": "{{user `ssh_username`}}",
-		"ssh_password": "{{user `ssh_password`}}",
-		"ssh_port": 22,
-		"ssh_wait_timeout": "10000s",
-		"guest_additions_mode": "disable",
-		"shutdown_command": "sudo -S shutdown -P now",
-		"output_directory": "/tmp/output-{{.Name}}-{{user `profile`}}",
-		"format": "ova"
-	}],
-	"provisioners": [{
-		"type": "shell",
-		"execute_command": "sudo -S sh '{{.Path}}'",
-		"inline": [
-			"rm -f /etc/sudoers.d/centos",
-			"yum -y install cloud-init cloud-utils cloud-utils-growpart,
-			"systemctl enable cloud-config.service",
-			"systemctl enable cloud-final.service",
-			"systemctl enable cloud-init-local.service",
-			"systemctl enable cloud-init.service",
-			"sed -i /HWADDR/d /etc/sysconfig/network-scripts/ifcfg-*",
-			"echo \"{{user `ssh_username`}}:$(openssl rand -base64 32)\" | chpasswd",
-			"shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
-			"shred -u /root/.*history  /home/centos/.*history",
-			"dd if=/dev/zero of=/zeros bs=1M",
-			"rm -f /zeros"
-		]
-	}]
+  "description": "Bare CentOS 7 prepped for AMI import",
+  "variables": {
+    "profile": "lvm-xfs",
+    "disk_size": "8192",
+    "ssh_username": "centos",
+    "ssh_password": "centos"
+  },
+  "builders": [
+    {
+      "name": "centos7-{{user `profile`}}",
+      "type": "virtualbox-iso",
+      "vm_name": "centos7-{{user `profile`}}",
+      "headless": true,
+      "guest_os_type": "RedHat_64",
+      "disk_size": "{{user `disk_size`}}",
+      "iso_url": "http://mirror.steadfast.net/centos/7.1.1503/isos/x86_64/CentOS-7-x86_64-NetInstall-1503.iso",
+      "iso_checksum": "498bb78789ddc7973fe14358822eb1b48521bbaca91c17bd132c7f8c903d79b3",
+      "iso_checksum_type": "sha256",
+      "http_directory": "http",
+      "boot_command": [
+        "<tab> text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/ks-{{user `profile`}}.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "ssh_username": "{{user `ssh_username`}}",
+      "ssh_password": "{{user `ssh_password`}}",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "guest_additions_mode": "disable",
+      "shutdown_command": "sudo -S shutdown -P now",
+      "output_directory": "/tmp/output-{{.Name}}-{{user `profile`}}",
+      "format": "ova"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "10-growpart.cfg",
+      "destination": "/tmp/10-growpart.cfg"
+    },
+    {
+      "type": "shell",
+      "execute_command": "sudo -S sh '{{.Path}}'",
+      "inline": [
+        "rm -f /etc/sudoers.d/centos",
+        "yum -y install cloud-init cloud-utils cloud-utils-growpart",
+        "mv /tmp/10-growpart.cfg /etc/cloud/cloud.cfg.d/10-growpart.cfg",
+        "chown root:root /etc/cloud/cloud.cfg.d/10-growpart.cfg",
+        "systemctl enable cloud-config.service",
+        "systemctl enable cloud-final.service",
+        "systemctl enable cloud-init-local.service",
+        "systemctl enable cloud-init.service",
+        "sed -i /HWADDR/d /etc/sysconfig/network-scripts/ifcfg-*",
+        "echo \"{{user `ssh_username`}}:$(openssl rand -base64 32)\" | chpasswd",
+        "shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
+        "dd if=/dev/zero of=/zeros bs=1M",
+        "rm -f /zeros"
+      ]
+    }
+  ]
 }
 
