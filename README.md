@@ -8,9 +8,18 @@ Follow Amazon's [import/export guide](https://aws.amazon.com/ec2/vm-import/) to 
 
 # Usage
 
+## Building
 To use a different kickstart script, just set the `profile` accordingly.
-
 ```
-$ packer build -var 'profile=ext4' template.json
+packer build -var 'profile=ext4' template.json
 ```
 
+## Uploading to S3
+```
+aws s3 cp output-ext4/centos7-ec2-ext4.ova s3://my-ami-bucket/centos7-ec2-ext4.ova
+```
+
+## Importing to EC2
+```
+aws ec2 import-image --cli-input-json '{  "Description": "CentOS 7 EXT4", "DiskContainers": [ { "Description": "CentOS 7 EXT4", "UserBucket": { "S3Bucket": "my-ami-bucket", "S3Key" : "centos7-ec2-ext4.ova" } } ]}'
+```
