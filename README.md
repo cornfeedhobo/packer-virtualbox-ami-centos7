@@ -11,6 +11,6 @@ Follow Amazon's [import/export guide](https://aws.amazon.com/ec2/vm-import/) to 
 To use a different kickstart script, just set the `profile` accordingly.
 
 ```
-$ packer build -var 'profile=thinp' template.json
+$ packer build -var 'profile=ext4' template.json
 ```
 
